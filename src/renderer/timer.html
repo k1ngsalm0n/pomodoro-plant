@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>timer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href='https://fonts.googleapis.com/css?family=Pixelify Sans' rel='stylesheet'>
+</head>
+<body id="container-box">
+
+<main>
+    <div class="container-box">
+        <div class="header-container">
+            <h2 class="title">Pomodoro Plant</h2>
+            <div class="shrink-close-icon">
+                <img src="../assets/shrink-icon.png" alt="Shrink Icon" class="shrink-icon">
+                <img src="../assets/close-icon.png" alt="Close Icon" class="close-icon">
+            </div>
+        </div>
+
+        <div class="bottom-container">
+            <h1 class="study-txt">Study Mode</h1>
+            <img src="../assets/flower-img.png" alt="Flower Image" class="flower-img">
+            <div class="timer-container">
+                <h2 id="timer">25:00</h2>
+                <p id="pomodoro-count">Pomodoros completed: 0 / 4</p>
+                <div class="button-container">
+                    <button id="start-btn">Start</button>
+                    <button id="reset-btn">Reset</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Timer JS -->
+<script src="javascripts/timer.js"></script>
+</body>
+</html>
