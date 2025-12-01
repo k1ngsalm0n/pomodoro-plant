@@ -1,0 +1,69 @@
+extends layout
+
+block content
+  .bottom-container(style="height: auto; min-height: 300px;")
+    h1.study-txt My Garden
+    p.tap-txt(style="margin-bottom: 20px;") Unlocked: 
+      span#unlocked-count 0
+      |  / 
+      span#total-count 0
+
+    .plants-grid(style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-height: 400px; overflow-y: auto; padding: 10px;")
+      // Plants will be loaded here via JS
+
+    button#menu-btn.enter-btn(style="margin-top: 20px; position: static;") Back to Menu
+
+block scripts
+  script.
+    document.getElementById('menu-btn').addEventListener('click', () => {
+      window.location.href = '/menu';
+    });
+
+    async function loadPlants() {
+      try {
+        const response = await fetch('/my-plants');
+        const data = await response.json();
+
+        document.getElementById('unlocked-count').textContent = data.plants.length;
+        document.getElementById('total-count').textContent = data.total;
+
+        const grid = document.querySelector('.plants-grid');
+        grid.innerHTML = '';
+
+        // Create a map of unlocked plants for easy lookup
+        const unlockedMap = new Map(data.plants.map(p => [p.id, p]));
+
+        // Loop through all possible IDs (assuming 1 to data.total)
+        for (let i = 1; i <= data.total; i++) {
+            const plant = unlockedMap.get(i);
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.flexDirection = 'column';
+            item.style.alignItems = 'center';
+            item.style.padding = '5px';
+            item.style.border = '1px solid #ddd';
+            item.style.borderRadius = '10px';
+            item.style.background = '#fff';
+
+            if (plant) {
+                item.innerHTML = `
+                    <img src="/assets/plant_stage_4/${plant.id}.svg" width="50" height="50">
+                    <span style="font-size: 10px; text-align: center; margin-top: 5px;">${plant.name}</span>
+                `;
+            } else {
+                item.innerHTML = `
+                    <div style="width: 50px; height: 50px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <span style="color: #aaa; font-size: 20px;">?</span>
+                    </div>
+                    <span style="font-size: 10px; text-align: center; margin-top: 5px; color: #aaa;">Locked</span>
+                `;
+            }
+            grid.appendChild(item);
+        }
+
+      } catch (error) {
+        console.error('Error loading plants:', error);
+      }
+    }
+
+    loadPlants();

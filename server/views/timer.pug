@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  .bottom-container
+    h1.study-txt Study Mode
+    img#plant-img.flower-img(src="/assets/plant_stage_1.svg", alt="Plant Image")
+    .timer-container
+      h2#timer 25:00
+      p#pomodoro-count Pomodoros completed: 0 / 4
+      .button-container
+        button#start-btn Start
+        button#reset-btn Reset
+        button#back-btn Back
+
+block scripts
+  script(src="/js/timer.js")

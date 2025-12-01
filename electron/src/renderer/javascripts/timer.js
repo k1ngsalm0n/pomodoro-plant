@@ -4,7 +4,7 @@ const pomodoroCounterDisplay = document.getElementById('pomodoro-count');
 const toggleBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
 
-let studyMinutes = 25;       // for testing
+let studyMinutes = 25;
 let shortBreakMinutes = 5;
 let longBreakMinutes = 15;
 
@@ -14,74 +14,69 @@ let pomodoroCount = 0;
 let onBreak = false;
 let isRunning = false;
 
-// Format seconds into MM:SS
+// Format MM:SS
 function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
 }
 
-// Update display
+// Update screen
 function updateDisplay() {
     timerDisplay.textContent = formatTime(seconds);
     pomodoroCounterDisplay.textContent = `Pomodoros completed: ${pomodoroCount} / 4`;
 
-    // Update session type display
     if (!onBreak) {
         sessionTypeDisplay.textContent = 'Study Mode';
     } else {
-        if (pomodoroCount % 4 === 0) {
-            sessionTypeDisplay.textContent = 'Long Break';
-        } else {
-            sessionTypeDisplay.textContent = 'Short Break';
-        }
+        sessionTypeDisplay.textContent =
+            pomodoroCount % 4 === 0 ? 'Long Break' : 'Short Break';
     }
 }
 
-// Check if pomodoro cycle is complete and redirect
+// NEW IMPORTANT FIX — check only after returning to STUDY MODE
 function checkCompletion() {
     if (pomodoroCount >= 4 && !onBreak) {
-        // Clear the timer and redirect to ending page
         clearInterval(timerInterval);
         isRunning = false;
+
         setTimeout(() => {
             window.location.href = 'ending.html';
-        }, 1000); // Small delay to show the completion state
+        }, 500);
+
         return true;
     }
     return false;
 }
 
-// Transition to next session
+// Move to next stage
 function nextSession() {
     if (!onBreak) {
-        // Study session finished
+        // Finished study → go to break
         pomodoroCount++;
 
-        // Check if we've completed the cycle after incrementing count
-        if (checkCompletion()) {
-            return; // Stop further execution if redirecting
-        }
-
+        // 🔥 FIX: do NOT check until AFTER you return from break
         if (pomodoroCount % 4 === 0) {
             seconds = longBreakMinutes * 60;
         } else {
             seconds = shortBreakMinutes * 60;
         }
+
         onBreak = true;
+
     } else {
-        // Break finished
+        // Finished break → return to study
         seconds = studyMinutes * 60;
         onBreak = false;
 
-        // Check completion after returning from break
-        checkCompletion();
+        // 🔥 NOW we check for full completion
+        if (checkCompletion()) return;
     }
 
     updateDisplay();
 }
 
-// Start / Resume timer
+// Start / Resume
 function startTimer() {
     if (isRunning) return;
 
@@ -94,48 +89,53 @@ function startTimer() {
         if (seconds <= 0) {
             clearInterval(timerInterval);
             isRunning = false;
+
             nextSession();
 
-            // Only auto-start if we're not redirecting
+            // if not finished whole cycle, auto continue
             if (pomodoroCount < 4 || onBreak) {
                 startTimer();
             }
+
+            return;
         }
 
         updateDisplay();
     }, 1000);
 }
 
-// Pause timer
+// Pause
 function pauseTimer() {
     clearInterval(timerInterval);
     isRunning = false;
     toggleBtn.textContent = 'Resume';
 }
 
-// Reset timer
+// Reset
 function resetTimer() {
     clearInterval(timerInterval);
     isRunning = false;
     seconds = studyMinutes * 60;
-    onBreak = false;
     pomodoroCount = 0;
+    onBreak = false;
     toggleBtn.textContent = 'Start';
     updateDisplay();
 }
 
-// Toggle timer function
+// Start/Pause/Resume button
 function toggleTimer() {
-    if (!isRunning) {
+    if (!isRunning && toggleBtn.textContent === 'Resume') {
+        startTimer();
+    } else if (!isRunning) {
         startTimer();
     } else {
         pauseTimer();
     }
 }
 
-// Initial display
+// Run once on load
 updateDisplay();
 
-// Button events
+// Events
 toggleBtn.addEventListener('click', toggleTimer);
 resetBtn.addEventListener('click', resetTimer);

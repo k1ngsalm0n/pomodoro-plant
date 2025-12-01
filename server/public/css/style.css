@@ -1,0 +1,222 @@
+/* GLOBAL PAGE */
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #F0F7F0; /* Softer background */
+    font-family: "Pixelify Sans", sans-serif;
+    color: #2E4A2E;
+}
+
+/* HEADER BAR */
+.header-container {
+    width: 90%;
+    max-width: 400px;
+    height: 60px;
+    background: #4CAF50; /* Material Green */
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+}
+
+/* HEADER TEXT */
+.title {
+    font-weight: 700;
+    font-size: 20px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+/* HEADER ICONS */
+.shrink-close-icon {
+    display: flex;
+    gap: 10px;
+}
+
+.shrink-icon,
+.close-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.shrink-icon:hover,
+.close-icon:hover {
+    transform: scale(1.1);
+}
+
+/* MAIN BOX UNDER HEADER */
+.container-box {
+    width: 90%;
+    max-width: 400px;
+    background: #FFFFFF;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    min-height: 400px;
+}
+
+/* INNER PALE BOX */
+.bottom-container {
+    width: 100%;
+    background: #E8F5E9; /* Light Green */
+    border-radius: 15px;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    gap: 15px;
+}
+
+/* FORMS */
+form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+}
+
+label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #388E3C;
+}
+
+input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #C8E6C9;
+    font-family: inherit;
+    font-size: 16px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* BUTTONS */
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.enter-btn, .tap-btn, #start-btn, #reset-btn, #back-btn, #menu-btn, #again-btn {
+    background: #FF8A65; /* Salmon/Orange */
+    color: white;
+}
+
+.enter-btn:hover, .tap-btn:hover, #start-btn:hover, #reset-btn:hover, #back-btn:hover, #menu-btn:hover, #again-btn:hover {
+    background: #FF7043;
+}
+
+.study-btn, .plant-btn {
+    width: 120px;
+    height: 120px;
+    border-radius: 15px;
+    font-size: 20px;
+    background: #81C784;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.study-btn:hover, .plant-btn:hover {
+    background: #66BB6A;
+}
+
+/* LINKS */
+a {
+    color: #388E3C;
+    text-decoration: none;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* TEXT */
+.welcome-txt, .login-txt, .register-txt, .study-txt, .congratz-txt {
+    font-size: 24px;
+    color: #2E7D32;
+    text-align: center;
+    margin: 0 0 15px 0;
+}
+
+/* TIMER */
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+#timer {
+    font-size: 48px;
+    font-weight: bold;
+    color: #1B5E20;
+    margin: 10px 0;
+}
+
+#pomodoro-count {
+    font-size: 16px;
+    color: #558B2F;
+    margin: 0;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.buttons-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* IMAGES */
+.flower-img {
+    width: 100px;
+    height: auto;
+    margin: 10px 0;
+}

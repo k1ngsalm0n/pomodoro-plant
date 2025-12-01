@@ -1,0 +1,20 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title #{title}
+    link(rel="stylesheet", href="/css/style.css")
+    link(href='https://fonts.googleapis.com/css?family=Pixelify Sans', rel='stylesheet')
+  body(id="container-box")
+    main
+      .container-box
+        .header-container
+          h2.title Pomodoro Plant
+          .shrink-close-icon
+            img.shrink-icon(src="/assets/shrink-icon.png", alt="Shrink Icon")
+            img.close-icon(src="/assets/close-icon.png", alt="Close Icon")
+        
+        block content
+    
+    block scripts
