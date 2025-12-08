@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { generateToken } = require('../middleware/jwt');
 
-// LOGIN
+// LOGIN - POST /api/login
 router.post("/login", (req, res) => {
     try {
         console.log("Login attempt received:", req.body);
@@ -27,9 +28,18 @@ router.post("/login", (req, res) => {
                     return res.status(401).json({ error: "Invalid login" });
                 }
 
+                // Generate JWT token
+                const token = generateToken(row);
+
+                // Also set session for SSR views compatibility
                 req.session.user = row.username;
+
                 console.log("Login successful for user:", row.username);
-                res.json({ message: "Login success", username: row.username });
+                res.json({
+                    message: "Login success",
+                    username: row.username,
+                    token: token
+                });
             }
         );
     } catch (error) {
@@ -38,7 +48,7 @@ router.post("/login", (req, res) => {
     }
 });
 
-// REGISTER
+// REGISTER - POST /api/register
 router.post("/register", (req, res) => {
     const { username, password } = req.body;
 
@@ -57,12 +67,29 @@ router.post("/register", (req, res) => {
                 console.error("Registration error:", err);
                 return res.status(500).json({ error: "Internal server error" });
             }
-            res.json({ message: "Registration successful" });
+
+            // Auto-login: generate token for newly registered user
+            db.get("SELECT * FROM users WHERE id = ?", [this.lastID], (err, user) => {
+                if (err || !user) {
+                    return res.json({ message: "Registration successful" });
+                }
+
+                const token = generateToken(user);
+
+                // Initialize user stats
+                db.run("INSERT INTO user_stats (user_id) VALUES (?)", [user.id]);
+
+                res.json({
+                    message: "Registration successful",
+                    username: user.username,
+                    token: token
+                });
+            });
         }
     );
 });
 
-// LOGOUT
+// LOGOUT - POST /api/logout
 router.post("/logout", (req, res) => {
     req.session.destroy((err) => {
         if (err) {

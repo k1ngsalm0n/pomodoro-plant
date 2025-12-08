@@ -3,9 +3,23 @@ extends layout
 block content
   .bottom-container
     h1.congratz-txt Let grow some plants
+    
+    //- Stats section
+    .stats-container(style="display: flex; justify-content: space-around; width: 100%; margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px;")
+      .stat-item(style="text-align: center;")
+        p.stat-value(id="total-sessions" style="font-size: 24px; font-weight: bold; margin: 0; color: #7cb342;") -
+        p.stat-label(style="font-size: 11px; margin: 0; opacity: 0.8;") Sessions
+      .stat-item(style="text-align: center;")
+        p.stat-value(id="current-streak" style="font-size: 24px; font-weight: bold; margin: 0; color: #ff9800;") -
+        p.stat-label(style="font-size: 11px; margin: 0; opacity: 0.8;") 🔥 Streak
+      .stat-item(style="text-align: center;")
+        p.stat-value(id="longest-streak" style="font-size: 24px; font-weight: bold; margin: 0; color: #9c27b0;") -
+        p.stat-label(style="font-size: 11px; margin: 0; opacity: 0.8;") Best Streak
+    
     button#study-btn.study-btn Study
     button#plant-btn.plant-btn Plant
     button#logout-btn.enter-btn(style="margin-top: 20px; width: 100px; height: 35px;") Logout
 
 block scripts
   script(src="/js/menu.js")
+

@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("/register", {
+            const response = await fetch("/api/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -28,8 +28,16 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (response.ok) {
-                alert("Registration successful! Please login.");
-                window.location.href = "/login";
+                const data = await response.json();
+                // Store JWT token if provided (auto-login)
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    alert("Registration successful! You are now logged in.");
+                    window.location.href = "/menu";
+                } else {
+                    alert("Registration successful! Please login.");
+                    window.location.href = "/login";
+                }
             } else {
                 const error = await response.json();
                 alert(error.error || "Registration failed");

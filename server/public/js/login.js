@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("/login", {
+            const response = await fetch("/api/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -23,6 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (response.ok) {
                 const data = await response.json();
+                // Store JWT token for API calls
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
                 alert(`Login successful! Welcome ${data.username}`);
                 window.location.href = "/menu";
             } else {

@@ -17,11 +17,123 @@ let isRunning = false;
 // Assign a random flower ID for this session (stays consistent)
 let currentFlowerId = Math.floor(Math.random() * 30) + 1;
 
+// Track the flower data received from API
+let currentFlowerData = null;
+
 // Format MM:SS
 function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
+}
+
+// Call API to grow plant (called after each completed pomodoro)
+async function growPlant() {
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch('/api/plant/grow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: JSON.stringify({ flowerId: currentFlowerId })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`[Timer] Plant grew to stage ${data.growth_stage}:`, data.flower);
+            currentFlowerData = data;
+
+            // Play grow sound and show notification
+            if (typeof soundEffects !== 'undefined') {
+                soundEffects.playGrowSound();
+            }
+            if (typeof notifications !== 'undefined') {
+                notifications.showPlantGrown(data.growth_stage);
+            }
+
+            return data;
+        } else {
+            console.error('Error growing plant:', await response.text());
+            return null;
+        }
+    } catch (err) {
+        console.error('Error growing plant:', err);
+        return null;
+    }
+}
+
+// Record completed pomodoro session for stats tracking
+async function completePomodoro() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        // First start a session (to get session_id)
+        const startResponse = await fetch('/api/pomodoro/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ duration_minutes: studyMinutes, session_type: 'study' })
+        });
+
+        if (startResponse.ok) {
+            const startData = await startResponse.json();
+
+            // Then complete it immediately (since we're tracking completed sessions)
+            await fetch('/api/pomodoro/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ session_id: startData.session_id })
+            });
+
+            console.log('[Timer] Pomodoro session recorded for stats');
+        }
+    } catch (err) {
+        console.error('Error recording pomodoro session:', err);
+    }
+}
+
+// Load existing plant state on page load
+async function loadPlantState() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        const response = await fetch('/api/plant/state', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('[Timer] Loaded plant state:', data);
+
+            // Restore pomodoro count based on growth stage
+            if (data.growth_stage && data.growth_stage > 0 && data.growth_stage < 4) {
+                pomodoroCount = data.growth_stage;
+                currentFlowerData = data;
+
+                // Use the existing plant's flower for display
+                if (data.flower) {
+                    currentFlowerId = data.flower.id;
+                }
+
+                console.log(`[Timer] Restored progress: ${pomodoroCount} pomodoros completed`);
+            }
+
+            updateDisplay();
+        }
+    } catch (err) {
+        console.error('Error loading plant state:', err);
+    }
 }
 
 // Update screen
@@ -49,15 +161,29 @@ function updateDisplay() {
     }
 }
 
-// NEW IMPORTANT FIX — check only after returning to STUDY MODE
+// Check if all 4 pomodoros are done
 function checkCompletion() {
     if (pomodoroCount >= 4 && !onBreak) {
         clearInterval(timerInterval);
         isRunning = false;
 
+        // Play unlock celebration sound (user already interacted on timer page)
+        if (typeof soundEffects !== 'undefined') {
+            soundEffects.playUnlockSound();
+        }
+        if (typeof notifications !== 'undefined' && currentFlowerData && currentFlowerData.flower) {
+            notifications.showFlowerUnlocked(currentFlowerData.flower.name);
+        }
+
+        // Redirect to ending page after sound plays
         setTimeout(() => {
-            window.location.href = '/ending';
-        }, 500);
+            if (currentFlowerData && currentFlowerData.flower) {
+                const flower = currentFlowerData.flower;
+                window.location.href = `/ending?flower=${flower.id}&name=${encodeURIComponent(flower.name)}&isNew=${currentFlowerData.isNew || currentFlowerData.is_fully_grown}`;
+            } else {
+                window.location.href = '/ending';
+            }
+        }, 800);
 
         return true;
     }
@@ -65,12 +191,22 @@ function checkCompletion() {
 }
 
 // Move to next stage
-function nextSession() {
+async function nextSession() {
     if (!onBreak) {
         // Finished study → go to break
         pomodoroCount++;
 
-        // 🔥 FIX: do NOT check until AFTER you return from break
+        // Play session complete sound (no notification - plant growing notification is enough)
+        if (typeof soundEffects !== 'undefined') {
+            soundEffects.playCompleteSound();
+        }
+
+        // 🌱 Call API to grow plant after each completed pomodoro
+        await growPlant();
+
+        // 📊 Record completed session for stats tracking
+        await completePomodoro();
+
         if (pomodoroCount % 4 === 0) {
             seconds = longBreakMinutes * 60;
         } else {
@@ -84,7 +220,15 @@ function nextSession() {
         seconds = studyMinutes * 60;
         onBreak = false;
 
-        // 🔥 NOW we check for full completion
+        // Play break over notification
+        if (typeof soundEffects !== 'undefined') {
+            soundEffects.playStartSound();
+        }
+        if (typeof notifications !== 'undefined') {
+            notifications.showTimerComplete('break');
+        }
+
+        // Check for full completion after returning from break
         if (checkCompletion()) return;
     }
 
@@ -98,34 +242,24 @@ function startTimer() {
     isRunning = true;
     toggleBtn.textContent = 'Pause';
 
-    timerInterval = setInterval(() => {
+    // Request notification permission on first user click
+    if (typeof notifications !== 'undefined') {
+        notifications.requestPermission();
+    }
+
+    // Play start sound on first start
+    if (typeof soundEffects !== 'undefined') {
+        soundEffects.playStartSound();
+    }
+
+    timerInterval = setInterval(async () => {
         seconds--;
 
         if (seconds <= 0) {
             clearInterval(timerInterval);
             isRunning = false;
 
-            nextSession();
-
-            // if finished whole cycle (4 pomodoros), unlock a flower
-            if (pomodoroCount >= 4 && !onBreak) {
-                console.log(`[Timer] Sending flower ID ${currentFlowerId} to complete-cycle`);
-                fetch('/complete-cycle', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ flowerId: currentFlowerId })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        console.log(`[Timer] Received flower:`, data.flower);
-                        window.location.href = `/ending?flower=${data.flower.id}&name=${encodeURIComponent(data.flower.name)}&isNew=${data.isNew}`;
-                    })
-                    .catch(err => {
-                        console.error('Error completing cycle:', err);
-                        window.location.href = '/ending';
-                    });
-                return;
-            }
+            await nextSession();
 
             // if not finished whole cycle, auto continue
             if (pomodoroCount < 4 || onBreak) {
@@ -144,6 +278,11 @@ function pauseTimer() {
     clearInterval(timerInterval);
     isRunning = false;
     toggleBtn.textContent = 'Resume';
+
+    // Play pause sound
+    if (typeof soundEffects !== 'undefined') {
+        soundEffects.playPauseSound();
+    }
 }
 
 // Reset
@@ -153,6 +292,7 @@ function resetTimer() {
     seconds = studyMinutes * 60;
     pomodoroCount = 0;
     onBreak = false;
+    currentFlowerData = null;
     toggleBtn.textContent = 'Start';
     updateDisplay();
 }
@@ -168,8 +308,12 @@ function toggleTimer() {
     }
 }
 
-// Run once on load
-updateDisplay();
+// Run once on load - just load plant state (permission requested on Start click)
+async function init() {
+    await loadPlantState();
+}
+
+init();
 
 // Events
 toggleBtn.addEventListener('click', toggleTimer);
@@ -177,3 +321,4 @@ resetBtn.addEventListener('click', resetTimer);
 document.getElementById('back-btn').addEventListener('click', () => {
     window.location.href = "/menu";
 });
+

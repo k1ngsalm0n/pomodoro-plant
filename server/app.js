@@ -2,8 +2,24 @@ const express = require("express");
 const session = require("express-session");
 const cors = require("cors");
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("./middleware/jwt");
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.IO setup
+const io = new Server(server, {
+    cors: {
+        origin: true,
+        credentials: true
+    }
+});
+
+// Make io accessible to routes
+app.set('io', io);
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -53,15 +69,81 @@ app.use('/', assetRoutes);
 // Static files - this should come AFTER dynamic routes
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Use Routes
-app.use('/', authRoutes);
+// Use Routes - Auth and API routes mounted at /api
+app.use('/api', authRoutes);
+app.use('/api', apiRoutes);
 app.use('/', viewRoutes);
-app.use('/', apiRoutes);
+
+// ============================================
+// SOCKET.IO WEBSOCKET HANDLERS
+// ============================================
+
+// Authenticate socket connections
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+
+    if (!token) {
+        // Allow connection without token for initial connection
+        socket.user = null;
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        socket.user = decoded;
+        next();
+    } catch (err) {
+        next(new Error('Authentication error'));
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log('Socket connected:', socket.id);
+
+    // Join user-specific room for targeted broadcasts
+    if (socket.user) {
+        socket.join(`user_${socket.user.id}`);
+        console.log(`User ${socket.user.username} joined room user_${socket.user.id}`);
+    }
+
+    // Handle authentication after connection
+    socket.on('authenticate', (token) => {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            socket.user = decoded;
+            socket.join(`user_${decoded.id}`);
+            socket.emit('authenticated', { success: true, user: decoded.username });
+            console.log(`Socket ${socket.id} authenticated as ${decoded.username}`);
+        } catch (err) {
+            socket.emit('authenticated', { success: false, error: 'Invalid token' });
+        }
+    });
+
+    // Timer sync - broadcast timer updates to all user's devices
+    socket.on('timer:sync', (data) => {
+        if (socket.user) {
+            // Broadcast to all other sockets of this user
+            socket.to(`user_${socket.user.id}`).emit('timer:update', data);
+        }
+    });
+
+    // Plant sync - broadcast plant updates
+    socket.on('plant:sync', (data) => {
+        if (socket.user) {
+            socket.to(`user_${socket.user.id}`).emit('plant:update', data);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Socket disconnected:', socket.id);
+    });
+});
 
 const PORT = 5001;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`SERVER running at http://localhost:${PORT}`);
-    console.log("Health check: http://localhost:5001/health");
+    console.log("Health check: http://localhost:5001/api/health");
+    console.log("WebSocket enabled on same port");
 }).on('error', (err) => {
     console.error('Server error:', err);
 });

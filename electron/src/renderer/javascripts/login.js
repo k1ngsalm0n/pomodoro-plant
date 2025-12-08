@@ -13,14 +13,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            // Use Express server instead of Electron SQLite
-            const response = await window.api.serverPost("http://localhost:5000/login", {
+            // Use Express server with JWT authentication
+            const response = await window.api.serverPost("http://localhost:5001/api/login", {
                 username,
                 password
             });
 
             if (response.ok) {
                 const data = await response.json();
+                // Store JWT token for API calls
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                }
                 alert(`Login successful! Welcome ${data.username}`);
                 window.location.href = "menu.html";
             } else {
@@ -35,14 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Optional: Test server connection on load
     window.addEventListener('load', async () => {
         try {
-            const response = await fetch("http://localhost:5000/health");
+            const response = await fetch("http://localhost:5001/api/health");
             if (response.ok) {
                 console.log('Express server is running');
             } else {
                 console.log('Express server not responding properly');
             }
         } catch (error) {
-            console.log('Cannot reach Express server - make sure it\'s running on port 5000');
+            console.log('Cannot reach Express server - make sure it\'s running on port 5001');
         }
     });
 });
