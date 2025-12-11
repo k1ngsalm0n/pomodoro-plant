@@ -16,13 +16,13 @@ block content
 block scripts
   script.
     document.getElementById('menu-btn').addEventListener('click', () => {
-      window.location.href = '/menu';
+      window.location.href = 'menu.html';
     });
 
     async function loadPlants() {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/user/collection', {
+        const response = await fetch(`${API_BASE_URL}/api/user/collection`, {
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
           }
@@ -30,7 +30,7 @@ block scripts
         
         if (!response.ok) {
           if (response.status === 401) {
-            window.location.href = '/login';
+            window.location.href = 'login.html';
             return;
           }
           throw new Error('Failed to load plants');
@@ -61,7 +61,7 @@ block scripts
 
             if (plant) {
                 item.innerHTML = `
-                    <img src="/assets/plant_stage_4/${plant.id}.svg" width="50" height="50">
+                    <img src="assets/plant_stage_4/${plant.id}.svg" width="50" height="50">
                     <span style="font-size: 10px; text-align: center; margin-top: 5px;">${plant.name}</span>
                 `;
             } else {

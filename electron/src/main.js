@@ -13,8 +13,9 @@ function createWindow() {
         }
     });
 
-    // Load from Express server
-    win.loadURL("http://localhost:5001");
+    // Load from local static file
+    // win.loadURL("http://localhost:5001");
+    win.loadFile(path.join(__dirname, "../public/login.html"));
 }
 
 app.whenReady().then(createWindow);

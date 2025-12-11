@@ -4,7 +4,7 @@ block content
   .bottom-container
     h1.congratz-txt Congratulations!
     p#flower-message.tap-txt You unlocked a new flower!
-    img#flower-img.flower-img(src="/assets/plant_stage_4.svg", alt="Flower")
+    img#flower-img.flower-img(src="assets/plant_stage_4.svg", alt="Flower")
     p#flower-name.study-txt Rose
     .buttons-container
       button#menu-btn.enter-btn Menu
@@ -18,7 +18,7 @@ block scripts
     const isNew = urlParams.get('isNew') === 'true';
 
     if (flowerId && flowerName) {
-      document.getElementById('flower-img').src = `/assets/plant_stage_4/${flowerId}.svg`;
+      document.getElementById('flower-img').src = `assets/plant_stage_4/${flowerId}.svg`;
       document.getElementById('flower-name').textContent = flowerName;
       document.getElementById('flower-message').textContent = isNew 
         ? `You unlocked a new flower: ${flowerName}!` 
@@ -26,11 +26,11 @@ block scripts
     }
 
     document.getElementById('menu-btn').addEventListener('click', () => {
-      window.location.href = '/menu';
+      window.location.href = 'menu.html';
     });
 
     document.getElementById('again-btn').addEventListener('click', () => {
-      window.location.href = '/timer';
+      window.location.href = 'timer.html';
     });
 
 

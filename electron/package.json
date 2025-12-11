@@ -4,6 +4,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "npx electron .",
+    "prestart": "node copy-assets.js",
     "start:nix": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -4,7 +4,7 @@ async function loadStats() {
     if (!token) return;
 
     try {
-        const response = await fetch('/api/user/stats', {
+        const response = await fetch(`${API_BASE_URL}/api/user/stats`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -25,20 +25,20 @@ async function loadStats() {
 loadStats();
 
 document.getElementById("study-btn").addEventListener("click", () => {
-    window.location.href = "/timer";
+    window.location.href = getPageUrl("timer");
 });
 
 document.getElementById("plant-btn").addEventListener("click", () => {
-    window.location.href = "/plants";
+    window.location.href = getPageUrl("plants");
 });
 
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
-        const response = await fetch("/api/logout", { method: "POST" });
+        const response = await fetch(`${API_BASE_URL}/api/logout`, { method: "POST" });
         // Clear JWT token on logout
         localStorage.removeItem('token');
         if (response.ok) {
-            window.location.href = "/login";
+            window.location.href = getPageUrl("login");
         } else {
             alert("Logout failed");
         }

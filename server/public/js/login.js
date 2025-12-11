@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("/api/login", {
+            const response = await fetch(`${API_BASE_URL}/api/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     localStorage.setItem('token', data.token);
                 }
                 alert(`Login successful! Welcome ${data.username}`);
-                window.location.href = "/menu";
+                window.location.href = getPageUrl("menu");
             } else {
                 const error = await response.json();
                 alert(error.error || "Login failed");

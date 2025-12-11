@@ -31,7 +31,7 @@ function formatTime(sec) {
 async function growPlant() {
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch('/api/plant/grow', {
+        const response = await fetch(`${API_BASE_URL}/api/plant/grow`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -44,6 +44,11 @@ async function growPlant() {
             const data = await response.json();
             console.log(`[Timer] Plant grew to stage ${data.growth_stage}:`, data.flower);
             currentFlowerData = data;
+
+            // Update the local flower ID to match what the server says (in case we had a random one)
+            if (data.flower && data.flower.id) {
+                currentFlowerId = data.flower.id;
+            }
 
             // Play grow sound and show notification
             if (typeof soundEffects !== 'undefined') {
@@ -71,7 +76,7 @@ async function completePomodoro() {
 
     try {
         // First start a session (to get session_id)
-        const startResponse = await fetch('/api/pomodoro/start', {
+        const startResponse = await fetch(`${API_BASE_URL}/api/pomodoro/start`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -84,7 +89,7 @@ async function completePomodoro() {
             const startData = await startResponse.json();
 
             // Then complete it immediately (since we're tracking completed sessions)
-            await fetch('/api/pomodoro/complete', {
+            await fetch(`${API_BASE_URL}/api/pomodoro/complete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -106,7 +111,7 @@ async function loadPlantState() {
     if (!token) return;
 
     try {
-        const response = await fetch('/api/plant/state', {
+        const response = await fetch(`${API_BASE_URL}/api/plant/state`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -150,14 +155,14 @@ function updateDisplay() {
 
         // For stages 3 and 4, use the consistent flower ID for this session
         if (stage >= 3) {
-            plantImg.src = `/assets/plant_stage_${stage}/${currentFlowerId}.svg`;
+            plantImg.src = `assets/plant_stage_${stage}/${currentFlowerId}.svg`;
         } else {
-            plantImg.src = `/assets/plant_stage_${stage}.svg`;
+            plantImg.src = `assets/plant_stage_${stage}.svg`;
         }
     } else {
         sessionTypeDisplay.textContent =
             pomodoroCount % 4 === 0 ? 'Long Break' : 'Short Break';
-        plantImg.src = "/assets/break_icon.svg";
+        plantImg.src = "assets/break_icon.svg";
     }
 }
 
@@ -179,9 +184,9 @@ function checkCompletion() {
         setTimeout(() => {
             if (currentFlowerData && currentFlowerData.flower) {
                 const flower = currentFlowerData.flower;
-                window.location.href = `/ending?flower=${flower.id}&name=${encodeURIComponent(flower.name)}&isNew=${currentFlowerData.isNew || currentFlowerData.is_fully_grown}`;
+                window.location.href = getPageUrl(`ending?flower=${flower.id}&name=${encodeURIComponent(flower.name)}&isNew=${currentFlowerData.isNew || currentFlowerData.is_fully_grown}`);
             } else {
-                window.location.href = '/ending';
+                window.location.href = getPageUrl('ending');
             }
         }, 800);
 
@@ -319,6 +324,6 @@ init();
 toggleBtn.addEventListener('click', toggleTimer);
 resetBtn.addEventListener('click', resetTimer);
 document.getElementById('back-btn').addEventListener('click', () => {
-    window.location.href = "/menu";
+    window.location.href = getPageUrl("menu");
 });
 

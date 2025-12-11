@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("/api/register", {
+            const response = await fetch(`${API_BASE_URL}/api/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -33,10 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.token) {
                     localStorage.setItem('token', data.token);
                     alert("Registration successful! You are now logged in.");
-                    window.location.href = "/menu";
+                    window.location.href = getPageUrl("menu");
                 } else {
                     alert("Registration successful! Please login.");
-                    window.location.href = "/login";
+                    window.location.href = getPageUrl("login");
                 }
             } else {
                 const error = await response.json();
