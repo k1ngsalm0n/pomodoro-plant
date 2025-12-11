@@ -22,7 +22,7 @@ block scripts
     async function loadPlants() {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/plant/collection', {
+        const response = await fetch('/api/user/collection', {
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
           }

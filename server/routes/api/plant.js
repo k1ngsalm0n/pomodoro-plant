@@ -190,30 +190,4 @@ router.post("/new", requireAuth, (req, res) => {
     );
 });
 
-// GET /api/plant/collection - Get user's unlocked plants
-router.get("/collection", requireAuth, (req, res) => {
-    const userId = req.user.id;
-
-    db.all(
-        "SELECT plant_id, unlocked_at FROM user_plants WHERE user_id = ?",
-        [userId],
-        (err, rows) => {
-            if (err) {
-                return res.status(500).json({ error: "Database error" });
-            }
-
-            const unlockedPlants = rows.map(row => {
-                const flower = flowers.find(f => f.id === row.plant_id);
-                return { ...flower, unlocked_at: row.unlocked_at };
-            });
-
-            res.json({
-                plants: unlockedPlants,
-                total_available: flowers.length,
-                unlocked_count: unlockedPlants.length
-            });
-        }
-    );
-});
-
 module.exports = router;
