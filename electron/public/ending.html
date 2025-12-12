@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Done - Pomodoro Plant</title><link rel="icon" type="image/png" href="assets/flower-img.png"><link rel="stylesheet" href="css/style.css"><link href="https://fonts.googleapis.com/css?family=Pixelify Sans" rel="stylesheet"></head><body id="container-box"><main><div class="container-box"><div class="header-container"><h2 class="title">Pomodoro Plant</h2><div class="shrink-close-icon"><img class="shrink-icon" src="assets/shrink-icon.png" alt="Shrink Icon"><img class="close-icon" src="assets/close-icon.png" alt="Close Icon"></div></div><div class="bottom-container"><h1 class="congratz-txt">Congratulations!</h1><p class="tap-txt" id="flower-message">You unlocked a new flower!</p><img class="flower-img" id="flower-img" src="assets/plant_stage_4.svg" alt="Flower"><p class="study-txt" id="flower-name">Rose</p><div class="buttons-container"><button class="enter-btn" id="menu-btn">Menu</button><button class="enter-btn" id="again-btn">Again</button></div></div></div></main><script src="js/config.js"></script><script>const urlParams = new URLSearchParams(window.location.search);
+const flowerId = urlParams.get('flower');
+const flowerName = urlParams.get('name');
+const isNew = urlParams.get('isNew') === 'true';
+
+if (flowerId && flowerName) {
+  document.getElementById('flower-img').src = `assets/plant_stage_4/${flowerId}.svg`;
+  document.getElementById('flower-name').textContent = flowerName;
+  document.getElementById('flower-message').textContent = isNew 
+    ? `You unlocked a new flower: ${flowerName}!` 
+    : `You grew a ${flowerName}!`;
+}
+
+document.getElementById('menu-btn').addEventListener('click', () => {
+  window.location.href = 'menu.html';
+});
+
+document.getElementById('again-btn').addEventListener('click', () => {
+  window.location.href = 'timer.html';
+});</script></body></html>
