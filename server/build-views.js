@@ -30,9 +30,9 @@ views.forEach(view => {
         const compiledFunction = pug.compileFile(templatePath);
         const html = compiledFunction(view.locals);
         fs.writeFileSync(outputPath, html);
-        console.log(`✓ Generated ${view.name}.html`);
+        console.log(`Generated ${view.name}.html`);
     } catch (err) {
-        console.error(`✗ Error generating ${view.name}.html:`, err);
+        console.error(`Error generating ${view.name}.html:`, err);
         process.exit(1);
     }
 });

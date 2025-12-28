@@ -1,0 +1,23 @@
+R_DEF: Internal format may change without notice
+local
+color app_background
+color black
+color btn_action
+color btn_action_hover
+color card_background
+color header_green
+color inner_box_green
+color input_border
+color purple_200
+color purple_500
+color purple_700
+color teal_200
+color teal_700
+color text_body
+color text_label
+color text_title
+color white
+drawable ic_launcher
+id webview
+layout activity_main
+style Theme.PomodoroPlant

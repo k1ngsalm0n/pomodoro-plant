@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="app_background">#F0F7F0</color>
+    <color name="black">#FF000000</color>
+    <color name="btn_action">#FF8A65</color>
+    <color name="btn_action_hover">#FF7043</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="header_green">#4CAF50</color>
+    <color name="inner_box_green">#E8F5E9</color>
+    <color name="input_border">#C8E6C9</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="text_body">#2E4A2E</color>
+    <color name="text_label">#388E3C</color>
+    <color name="text_title">#2E7D32</color>
+    <color name="white">#FFFFFFFF</color>
+    <style name="Theme.PomodoroPlant" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/header_green</item>
+        <item name="colorPrimaryVariant">@color/text_title</item>
+        <item name="colorOnPrimary">@color/white</item>
+        
+        <item name="colorSecondary">@color/btn_action</item>
+        <item name="colorSecondaryVariant">@color/btn_action_hover</item>
+        <item name="colorOnSecondary">@color/white</item>
+        
+        <item name="android:statusBarColor" ns1:targetApi="l">?attr/colorPrimaryVariant</item>
+        
+        <item name="android:windowBackground">@color/app_background</item>
+    </style>
+</resources>
