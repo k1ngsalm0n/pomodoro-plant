@@ -35,8 +35,13 @@ document.getElementById("plant-btn").addEventListener("click", () => {
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
         const response = await fetch(`${API_BASE_URL}/api/logout`, { method: "POST" });
-        // Clear JWT token on logout
+
+        // Clear JWT token and disconnect socket
         localStorage.removeItem('token');
+        if (typeof window.socketClient !== 'undefined') {
+            window.socketClient.disconnect();
+        }
+
         if (response.ok) {
             window.location.href = getPageUrl("login");
         } else {

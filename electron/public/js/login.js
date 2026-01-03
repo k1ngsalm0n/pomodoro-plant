@@ -26,6 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Store JWT token for API calls
                 if (data.token) {
                     localStorage.setItem('token', data.token);
+
+                    // Authenticate socket for real-time sync
+                    if (typeof window.socketClient !== 'undefined') {
+                        window.socketClient.authenticate(data.token);
+                    }
                 }
                 alert(`Login successful! Welcome ${data.username}`);
                 window.location.href = getPageUrl("menu");

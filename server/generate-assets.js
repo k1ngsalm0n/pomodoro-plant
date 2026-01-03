@@ -93,4 +93,4 @@ flowers.forEach(flower => {
     fs.writeFileSync(path.join(assetsDir, `flower_${flower.id}.svg`), flowerSvg);
 });
 
-console.log(`✓ Generated assets for ${flowers.length} flowers.`);
+console.log(`Generated assets for ${flowers.length} flowers.`);

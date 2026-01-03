@@ -1,41 +1,66 @@
 package com.pomodoroplant
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.pomodoroplant.ui.garden.GardenScreen
+import com.pomodoroplant.ui.login.LoginScreen
+import com.pomodoroplant.ui.theme.PomodoroPlantTheme
+import com.pomodoroplant.ui.timer.TimerScreen
 
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var webView: WebView
-
-    @SuppressLint("SetJavaScriptEnabled")
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        webView = findViewById(R.id.webview)
-        
-        // Configure WebView
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        
-        // Keep navigation inside the WebView
-        webView.webViewClient = WebViewClient()
-        webView.webChromeClient = WebChromeClient()
-
-        // Load the local server (10.0.2.2 is localhost for Android Emulator)
-        // Make sure your server is running on port 5001!
-        webView.loadUrl("http://10.0.2.2:5001/login")
+        setContent {
+            PomodoroPlantTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation()
+                }
+            }
+        } 
     }
+}
 
-    override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("timer") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("timer") {
+            TimerScreen(
+                onGoToGarden = {
+                    navController.navigate("garden")
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("garden") {
+            GardenScreen(
+                onBackToTimer = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

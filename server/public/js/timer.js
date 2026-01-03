@@ -20,6 +20,9 @@ let currentFlowerId = Math.floor(Math.random() * 30) + 1;
 // Track the flower data received from API
 let currentFlowerData = null;
 
+// Socket sync flag to prevent infinite loops when receiving updates
+let isSyncingFromRemote = false;
+
 // Format MM:SS
 function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -141,6 +144,22 @@ async function loadPlantState() {
     }
 }
 
+// Broadcast timer state to other devices
+function broadcastTimerState() {
+    if (isSyncingFromRemote) return; // Don't broadcast if we're syncing from another device
+
+    if (typeof window.socketClient !== 'undefined' && window.socketClient.isConnected()) {
+        window.socketClient.syncTimer({
+            seconds: seconds,
+            pomodoroCount: pomodoroCount,
+            onBreak: onBreak,
+            isRunning: isRunning,
+            currentFlowerId: currentFlowerId,
+            currentFlowerData: currentFlowerData // Sync flower data too
+        });
+    }
+}
+
 // Update screen
 function updateDisplay() {
     timerDisplay.textContent = formatTime(seconds);
@@ -154,7 +173,7 @@ function updateDisplay() {
         const stage = Math.min(pomodoroCount + 1, 4);
 
         // For stages 3 and 4, use the consistent flower ID for this session
-        if (stage >= 3) {
+        if (stage >= 3 && currentFlowerId) {
             plantImg.src = `assets/plant_stage_${stage}/${currentFlowerId}.svg`;
         } else {
             plantImg.src = `assets/plant_stage_${stage}.svg`;
@@ -171,19 +190,22 @@ function checkCompletion() {
     if (pomodoroCount >= 4 && !onBreak) {
         clearInterval(timerInterval);
         isRunning = false;
+        timerInterval = null;
 
         // Play unlock celebration sound (user already interacted on timer page)
         if (typeof soundEffects !== 'undefined') {
             soundEffects.playUnlockSound();
         }
-        if (typeof notifications !== 'undefined' && currentFlowerData && currentFlowerData.flower) {
-            notifications.showFlowerUnlocked(currentFlowerData.flower.name);
+
+        const flower = (currentFlowerData && currentFlowerData.flower) ? currentFlowerData.flower : null;
+
+        if (typeof notifications !== 'undefined' && flower) {
+            notifications.showFlowerUnlocked(flower.name);
         }
 
         // Redirect to ending page after sound plays
         setTimeout(() => {
-            if (currentFlowerData && currentFlowerData.flower) {
-                const flower = currentFlowerData.flower;
+            if (flower) {
                 window.location.href = getPageUrl(`ending?flower=${flower.id}&name=${encodeURIComponent(flower.name)}&isNew=${currentFlowerData.isNew || currentFlowerData.is_fully_grown}`);
             } else {
                 window.location.href = getPageUrl('ending');
@@ -244,8 +266,17 @@ async function nextSession() {
 function startTimer() {
     if (isRunning) return;
 
+    // Safety: Clear any existing interval before starting a new one
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
     isRunning = true;
     toggleBtn.textContent = 'Pause';
+
+    // Broadcast state change to other devices
+    broadcastTimerState();
 
     // Request notification permission on first user click
     if (typeof notifications !== 'undefined') {
@@ -262,6 +293,7 @@ function startTimer() {
 
         if (seconds <= 0) {
             clearInterval(timerInterval);
+            timerInterval = null;
             isRunning = false;
 
             await nextSession();
@@ -280,7 +312,10 @@ function startTimer() {
 
 // Pause
 function pauseTimer() {
-    clearInterval(timerInterval);
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
     isRunning = false;
     toggleBtn.textContent = 'Resume';
 
@@ -288,11 +323,17 @@ function pauseTimer() {
     if (typeof soundEffects !== 'undefined') {
         soundEffects.playPauseSound();
     }
+
+    // Broadcast state change to other devices
+    broadcastTimerState();
 }
 
 // Reset
 function resetTimer() {
-    clearInterval(timerInterval);
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
     isRunning = false;
     seconds = studyMinutes * 60;
     pomodoroCount = 0;
@@ -300,6 +341,9 @@ function resetTimer() {
     currentFlowerData = null;
     toggleBtn.textContent = 'Start';
     updateDisplay();
+
+    // Broadcast reset to other devices
+    broadcastTimerState();
 }
 
 // Start/Pause/Resume button
@@ -312,6 +356,81 @@ function toggleTimer() {
         pauseTimer();
     }
 }
+
+// Listen for timer updates from other devices
+window.addEventListener('socket:timer:update', (event) => {
+    const data = event.detail;
+    console.log('[Timer] Received timer sync from another device:', data);
+
+    // Validate received data to prevent undefined errors
+    if (!data || typeof data.seconds === 'undefined') {
+        console.warn('[Timer] Invalid sync data received, ignoring');
+        return;
+    }
+
+    // Set flag to prevent broadcasting back
+    isSyncingFromRemote = true;
+
+    // Update local state from remote with fallbacks
+    seconds = typeof data.seconds === 'number' ? data.seconds : seconds;
+    pomodoroCount = typeof data.pomodoroCount === 'number' ? data.pomodoroCount : (typeof pomodoroCount === 'number' ? pomodoroCount : 0);
+    onBreak = typeof data.onBreak === 'boolean' ? data.onBreak : false;
+    currentFlowerId = data.currentFlowerId || currentFlowerId;
+    currentFlowerData = data.currentFlowerData || currentFlowerData;
+
+    // Sync running state
+    if (data.isRunning && !isRunning) {
+        // Other device started, so start here too (without broadcasting)
+        isRunning = true;
+        toggleBtn.textContent = 'Pause';
+        if (!timerInterval) {
+            timerInterval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    timerInterval = null;
+                }
+                updateDisplay();
+            }, 1000);
+        }
+    } else if (!data.isRunning && isRunning) {
+        // Other device paused, so pause here too
+        clearInterval(timerInterval);
+        timerInterval = null;
+        isRunning = false;
+        toggleBtn.textContent = data.seconds > 0 ? 'Resume' : 'Start';
+    }
+
+    updateDisplay();
+
+    // Reset flag after update
+    setTimeout(() => {
+        isSyncingFromRemote = false;
+    }, 100);
+});
+
+// Listen for plant updates from other devices
+window.addEventListener('socket:plant:update', (event) => {
+    const data = event.detail;
+    console.log('[Timer] Received plant sync from another device:', data);
+
+    currentFlowerData = data;
+    if (data.flower && data.flower.id) {
+        currentFlowerId = data.flower.id;
+    }
+
+    // If the plant is fully grown, we might need to trigger completion
+    if (data.growth_stage) {
+        pomodoroCount = data.growth_stage;
+    }
+
+    updateDisplay();
+
+    if (data.is_fully_grown || data.growth_stage >= 4) {
+        checkCompletion();
+    }
+});
 
 // Run once on load - just load plant state (permission requested on Start click)
 async function init() {
