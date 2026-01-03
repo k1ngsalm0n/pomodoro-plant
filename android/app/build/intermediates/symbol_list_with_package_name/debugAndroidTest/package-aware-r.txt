@@ -1,3 +1,0 @@
-com.pomodoroplant.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme
