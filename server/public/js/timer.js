@@ -4,9 +4,9 @@ const pomodoroCounterDisplay = document.getElementById('pomodoro-count');
 const toggleBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
 
-let studyMinutes = 0.10;
-let shortBreakMinutes = 0.10;
-let longBreakMinutes = 0.10;
+let studyMinutes = 25;
+let shortBreakMinutes = 5;
+let longBreakMinutes = 15;
 
 let timerInterval = null;
 let seconds = studyMinutes * 60;
